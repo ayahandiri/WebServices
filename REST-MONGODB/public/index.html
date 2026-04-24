@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>MythicGames — Live Products</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f0f1a; color: #e0e0ff; min-height: 100vh; padding: 2rem; }
+    h1 { color: #a78bfa; margin-bottom: 0.25rem; }
+    .subtitle { color: #6b7280; margin-bottom: 2rem; font-size: 0.875rem; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem; }
+    .badge-live { background: #16a34a22; color: #4ade80; border: 1px solid #16a34a; }
+    .form-panel { background: #1e1e2e; border: 1px solid #2d2d44; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; max-width: 480px; }
+    .form-panel h2 { font-size: 1rem; color: #c4b5fd; margin-bottom: 1rem; }
+    input { width: 100%; padding: 0.5rem 0.75rem; background: #0f0f1a; border: 1px solid #374151; border-radius: 6px; color: #e0e0ff; margin-bottom: 0.75rem; font-size: 0.875rem; }
+    button { padding: 0.5rem 1.25rem; background: #7c3aed; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; }
+    button:hover { background: #6d28d9; }
+    #log { background: #0f0f1a; border: 1px solid #2d2d44; border-radius: 8px; padding: 1rem; margin-bottom: 2rem; max-height: 140px; overflow-y: auto; font-size: 0.75rem; color: #6b7280; }
+    #log p { padding: 2px 0; }
+    .log-create { color: #4ade80; }
+    .log-update { color: #facc15; }
+    .log-delete { color: #f87171; }
+    #products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    .card { background: #1e1e2e; border: 1px solid #2d2d44; border-radius: 12px; padding: 1rem; transition: border-color 0.3s; }
+    .card.highlight { border-color: #7c3aed; animation: pulse 0.6s ease-out; }
+    @keyframes pulse { 0%,100% { box-shadow: none; } 50% { box-shadow: 0 0 16px #7c3aed88; } }
+    .card h3 { color: #a78bfa; margin-bottom: 0.25rem; font-size: 0.95rem; }
+    .card .price { color: #4ade80; font-weight: bold; margin-bottom: 0.5rem; }
+    .card .about { color: #9ca3af; font-size: 0.8rem; margin-bottom: 0.5rem; }
+    .card .cats { font-size: 0.7rem; color: #6b7280; }
+    .card .id { font-size: 0.65rem; color: #374151; margin-top: 0.5rem; word-break: break-all; }
+  </style>
+</head>
+<body>
+
+<h1>MythicGames <span class="badge badge-live">LIVE</span></h1>
+<p class="subtitle">Les produits se mettent à jour en temps réel via Socket.io — ouvre dans deux onglets pour tester.</p>
+
+<div class="form-panel">
+  <h2>Ajouter un produit</h2>
+  <input id="inp-name"  placeholder="Nom du jeu" />
+  <input id="inp-about" placeholder="Description" />
+  <input id="inp-price" placeholder="Prix (ex: 29.99)" type="number" step="0.01" />
+  <button onclick="createProduct()">Créer</button>
+</div>
+
+<p style="font-size:0.8rem;color:#6b7280;margin-bottom:0.5rem;">Événements temps réel :</p>
+<div id="log"></div>
+
+<div id="products-grid"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let products  = [];
+
+  async function loadProducts() {
+    const r = await fetch('/products');
+    products = await r.json();
+    render();
+  }
+
+  function render() {
+    const grid = document.getElementById('products-grid');
+    grid.innerHTML = products.map(p => `
+      <div class="card" id="card-${p._id}">
+        <h3>${esc(p.name)}</h3>
+        <div class="price">€${parseFloat(p.price).toFixed(2)}</div>
+        <div class="about">${esc(p.about || '')}</div>
+        ${p.categories?.length ? `<div class="cats">Catégories : ${p.categories.map(c=>esc(c.name)).join(', ')}</div>` : ''}
+        <div class="id">${p._id}</div>
+      </div>
+    `).join('');
+  }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function logEvent(action, data) {
+    const log = document.getElementById('log');
+    const cls = action === 'CREATE' ? 'log-create' : action === 'UPDATE' ? 'log-update' : 'log-delete';
+    const p = document.createElement('p');
+    p.className = cls;
+    p.textContent = `[${new Date().toLocaleTimeString()}] ${action} — ${data.name || data._id}`;
+    log.prepend(p);
+  }
+
+  function highlight(id) {
+    const el = document.getElementById(`card-${id}`);
+    if (!el) return;
+    el.classList.add('highlight');
+    setTimeout(() => el.classList.remove('highlight'), 800);
+  }
+
+  socket.on('products', ({ action, data }) => {
+    logEvent(action, data);
+    if (action === 'CREATE') {
+      products.push(data);
+    } else if (action === 'UPDATE') {
+      const idx = products.findIndex(p => p._id === data._id);
+      if (idx !== -1) products[idx] = data; else products.push(data);
+    } else if (action === 'DELETE') {
+      products = products.filter(p => String(p._id) !== String(data._id));
+    }
+    render();
+    if (action !== 'DELETE') setTimeout(() => highlight(data._id), 50);
+  });
+
+  async function createProduct() {
+    const name  = document.getElementById('inp-name').value.trim();
+    const about = document.getElementById('inp-about').value.trim();
+    const price = parseFloat(document.getElementById('inp-price').value);
+    if (!name || isNaN(price)) return alert('Nom et prix requis');
+    await fetch('/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, about, price }),
+    });
+    document.getElementById('inp-name').value  = '';
+    document.getElementById('inp-about').value = '';
+    document.getElementById('inp-price').value = '';
+  }
+
+  loadProducts();
+</script>
+</body>
+</html>

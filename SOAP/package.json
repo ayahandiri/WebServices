@@ -1,0 +1,14 @@
+{
+  "name": "mythicgames-soap",
+  "version": "1.0.0",
+  "description": "MythicGames SOAP Service",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "client": "node client.js"
+  },
+  "dependencies": {
+    "postgres": "^3.4.4",
+    "soap": "^0.45.0"
+  }
+}

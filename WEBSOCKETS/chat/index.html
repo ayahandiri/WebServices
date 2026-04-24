@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>MythicGames Chat</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f0f1a; color: #e0e0ff; height: 100vh; display: flex; flex-direction: column; }
+
+    /* Join screen */
+    #join-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 1rem; }
+    #join-screen h1 { color: #a78bfa; font-size: 2rem; }
+    #join-screen input { padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #374151; background: #1e1e2e; color: #e0e0ff; font-size: 1rem; width: 280px; text-align: center; }
+    #join-screen button { padding: 0.75rem 2rem; background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+
+    /* Chat screen */
+    #chat-screen { display: none; flex: 1; flex-direction: column; }
+    #chat-header { background: #1e1e2e; border-bottom: 1px solid #2d2d44; padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    #chat-header h2 { color: #a78bfa; font-size: 1rem; }
+    #user-list { font-size: 0.75rem; color: #6b7280; }
+    #messages { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .msg { max-width: 70%; }
+    .msg.system { align-self: center; }
+    .msg.system span { font-size: 0.75rem; color: #4b5563; font-style: italic; }
+    .msg.mine { align-self: flex-end; }
+    .msg.other { align-self: flex-start; }
+    .bubble { padding: 0.5rem 0.875rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
+    .mine .bubble { background: #7c3aed; color: white; border-bottom-right-radius: 2px; }
+    .other .bubble { background: #1e1e2e; border: 1px solid #2d2d44; border-bottom-left-radius: 2px; }
+    .msg-meta { font-size: 0.65rem; color: #4b5563; margin-top: 2px; }
+    .mine .msg-meta { text-align: right; }
+    #typing-indicator { padding: 0.25rem 1.5rem; font-size: 0.75rem; color: #6b7280; height: 1.25rem; }
+    #input-bar { background: #1e1e2e; border-top: 1px solid #2d2d44; padding: 0.75rem 1.5rem; display: flex; gap: 0.75rem; }
+    #input-bar input { flex: 1; padding: 0.5rem 0.875rem; background: #0f0f1a; border: 1px solid #374151; border-radius: 8px; color: #e0e0ff; font-size: 0.9rem; }
+    #input-bar button { padding: 0.5rem 1.25rem; background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<!-- Join screen -->
+<div id="join-screen">
+  <h1>MythicGames Chat</h1>
+  <input id="username-input" placeholder="Ton pseudo..." maxlength="20" />
+  <button onclick="join()">Rejoindre</button>
+</div>
+
+<!-- Chat screen -->
+<div id="chat-screen">
+  <div id="chat-header">
+    <h2>MythicGames Chat</h2>
+    <span id="user-list"></span>
+  </div>
+  <div id="messages"></div>
+  <div id="typing-indicator"></div>
+  <div id="input-bar">
+    <input id="msg-input" placeholder="Message..." maxlength="500" onkeydown="onKey(event)" oninput="onTyping()" />
+    <button onclick="send()">Envoyer</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let myUsername = '';
+  let typingTimer;
+
+  function join() {
+    const name = document.getElementById('username-input').value.trim();
+    if (!name) return;
+    myUsername = name;
+    socket.emit('join', name);
+    document.getElementById('join-screen').style.display = 'none';
+    document.getElementById('chat-screen').style.display = 'flex';
+    document.getElementById('chat-screen').style.flexDirection = 'column';
+    document.getElementById('msg-input').focus();
+  }
+
+  function send() {
+    const input = document.getElementById('msg-input');
+    const text  = input.value.trim();
+    if (!text) return;
+    socket.emit('chat', text);
+    input.value = '';
+  }
+
+  function onKey(e) { if (e.key === 'Enter') send(); }
+
+  function onTyping() {
+    clearTimeout(typingTimer);
+    socket.emit('typing');
+    typingTimer = setTimeout(() => {}, 1500);
+  }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function timeStr(iso) {
+    return new Date(iso).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+  }
+
+  function appendMessage(msg) {
+    const container = document.getElementById('messages');
+    const div = document.createElement('div');
+    if (msg.type === 'system') {
+      div.className = 'msg system';
+      div.innerHTML = `<span>${esc(msg.text)}</span>`;
+    } else {
+      const mine = msg.from === myUsername;
+      div.className = `msg ${mine ? 'mine' : 'other'}`;
+      div.innerHTML = `
+        <div class="bubble">${esc(msg.text)}</div>
+        <div class="msg-meta">${mine ? '' : esc(msg.from) + ' · '}${timeStr(msg.at)}</div>
+      `;
+    }
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  socket.on('history', msgs => msgs.forEach(appendMessage));
+  socket.on('message', appendMessage);
+
+  socket.on('users', list => {
+    document.getElementById('user-list').textContent =
+      list.length + ' en ligne : ' + list.join(', ');
+  });
+
+  let typingClear;
+  socket.on('typing', username => {
+    const el = document.getElementById('typing-indicator');
+    el.textContent = `${username} est en train d'écrire…`;
+    clearTimeout(typingClear);
+    typingClear = setTimeout(() => { el.textContent = ''; }, 2000);
+  });
+
+  document.getElementById('username-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') join();
+  });
+</script>
+</body>
+</html>

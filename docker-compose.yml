@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: pg-mythic
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mythicdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./SOAP/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    restart: unless-stopped

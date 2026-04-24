@@ -1,0 +1,102 @@
+### ── VIEWS ──────────────────────────────────────────────────
+
+### Create view
+POST http://localhost:3003/views
+Content-Type: application/json
+
+{
+  "source": "mythicgames.com",
+  "url": "/products/elden-ring",
+  "visitor": "visitor-uuid-001",
+  "createdAt": "2026-04-23T10:00:00Z",
+  "meta": { "browser": "Chrome", "os": "Windows", "ref": "google" }
+}
+
+###
+### Create another view
+POST http://localhost:3003/views
+Content-Type: application/json
+
+{
+  "source": "mythicgames.com",
+  "url": "/products/witcher3",
+  "visitor": "visitor-uuid-001",
+  "createdAt": "2026-04-23T10:05:00Z",
+  "meta": { "browser": "Chrome", "duration": 45 }
+}
+
+###
+### Get all views
+GET http://localhost:3003/views
+
+###
+### Get view by id (replace id)
+GET http://localhost:3003/views/000000000000000000000001
+
+### ── ACTIONS ─────────────────────────────────────────────────
+
+### Create action
+POST http://localhost:3003/actions
+Content-Type: application/json
+
+{
+  "source": "mythicgames.com",
+  "url": "/products/elden-ring",
+  "action": "add_to_cart",
+  "visitor": "visitor-uuid-001",
+  "createdAt": "2026-04-23T10:02:00Z",
+  "meta": { "productId": "abc123", "price": 49.99 }
+}
+
+###
+### Create another action
+POST http://localhost:3003/actions
+Content-Type: application/json
+
+{
+  "source": "mythicgames.com",
+  "url": "/checkout",
+  "action": "checkout_start",
+  "visitor": "visitor-uuid-001",
+  "createdAt": "2026-04-23T10:08:00Z",
+  "meta": { "cartTotal": 49.99 }
+}
+
+###
+### Get all actions
+GET http://localhost:3003/actions
+
+### ── GOALS ───────────────────────────────────────────────────
+
+### Create goal
+POST http://localhost:3003/goals
+Content-Type: application/json
+
+{
+  "source": "mythicgames.com",
+  "url": "/checkout/success",
+  "goal": "purchase_complete",
+  "visitor": "visitor-uuid-001",
+  "createdAt": "2026-04-23T10:12:00Z",
+  "meta": { "orderId": "ord-999", "total": 49.99, "currency": "EUR" }
+}
+
+###
+### Get all goals
+GET http://localhost:3003/goals
+
+###
+### Get goal details with visitor journey (replace id)
+GET http://localhost:3003/goals/GOAL_ID_HERE/details
+
+### ── PATCH / DELETE ──────────────────────────────────────────
+
+### Patch a view
+PATCH http://localhost:3003/views/VIEW_ID_HERE
+Content-Type: application/json
+
+{ "meta": { "browser": "Firefox", "updated": true } }
+
+###
+### Delete a view
+DELETE http://localhost:3003/views/VIEW_ID_HERE

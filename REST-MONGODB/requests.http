@@ -1,0 +1,86 @@
+### ── CATEGORIES ────────────────────────────────────────────
+
+### Create category
+POST http://localhost:3001/categories
+Content-Type: application/json
+
+{ "name": "RPG" }
+
+###
+### Create another category
+POST http://localhost:3001/categories
+Content-Type: application/json
+
+{ "name": "Action" }
+
+###
+### Get all categories
+GET http://localhost:3001/categories
+
+###
+### Get category by id (replace with real id)
+GET http://localhost:3001/categories/000000000000000000000001
+
+###
+### Update category
+PUT http://localhost:3001/categories/000000000000000000000001
+Content-Type: application/json
+
+{ "name": "RPG & Strategy" }
+
+###
+### Delete category
+DELETE http://localhost:3001/categories/000000000000000000000001
+
+### ── PRODUCTS ────────────────────────────────────────────────
+
+### Create product (without category)
+POST http://localhost:3001/products
+Content-Type: application/json
+
+{ "name": "Elden Ring", "about": "Souls-like épique", "price": 49.99, "categoryIds": [] }
+
+###
+### Create product with categories (replace IDs)
+POST http://localhost:3001/products
+Content-Type: application/json
+
+{
+  "name": "The Witcher 3",
+  "about": "RPG médiéval fantastique",
+  "price": 19.99,
+  "categoryIds": ["CATEGORY_ID_HERE"]
+}
+
+###
+### Get all products (with categories joined)
+GET http://localhost:3001/products
+
+###
+### Get product by id (replace with real id)
+GET http://localhost:3001/products/000000000000000000000001
+
+###
+### Update product (PATCH)
+PATCH http://localhost:3001/products/000000000000000000000001
+Content-Type: application/json
+
+{ "price": 39.99 }
+
+###
+### Replace product (PUT)
+PUT http://localhost:3001/products/000000000000000000000001
+Content-Type: application/json
+
+{ "name": "Elden Ring DLC", "about": "Extension du jeu", "price": 24.99, "categoryIds": [] }
+
+###
+### Delete product
+DELETE http://localhost:3001/products/000000000000000000000001
+
+###
+### Validation error
+POST http://localhost:3001/products
+Content-Type: application/json
+
+{ "name": "No Price" }

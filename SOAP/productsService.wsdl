@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions
+  name="ProductsService"
+  targetNamespace="http://localhost:8000/products"
+  xmlns="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:tns="http://localhost:8000/products"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <!-- ===== TYPES ===== -->
+  <types>
+    <xsd:schema targetNamespace="http://localhost:8000/products">
+
+      <xsd:complexType name="Product">
+        <xsd:sequence>
+          <xsd:element name="id"    type="xsd:int"/>
+          <xsd:element name="name"  type="xsd:string"/>
+          <xsd:element name="about" type="xsd:string"/>
+          <xsd:element name="price" type="xsd:float"/>
+        </xsd:sequence>
+      </xsd:complexType>
+
+      <xsd:complexType name="ProductList">
+        <xsd:sequence>
+          <xsd:element name="product" type="tns:Product" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+      </xsd:complexType>
+
+      <!-- CreateProduct -->
+      <xsd:element name="CreateProductRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="name"  type="xsd:string"/>
+            <xsd:element name="about" type="xsd:string"/>
+            <xsd:element name="price" type="xsd:float"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="CreateProductResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="product" type="tns:Product"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <!-- GetProducts -->
+      <xsd:element name="GetProductsRequest">
+        <xsd:complexType>
+          <xsd:sequence/>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetProductsResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="products" type="tns:ProductList"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <!-- GetProduct -->
+      <xsd:element name="GetProductRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="id" type="xsd:int"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetProductResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="product" type="tns:Product"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <!-- PatchProduct -->
+      <xsd:element name="PatchProductRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="id"    type="xsd:int"/>
+            <xsd:element name="name"  type="xsd:string" minOccurs="0"/>
+            <xsd:element name="about" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="price" type="xsd:float"  minOccurs="0"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="PatchProductResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="product" type="tns:Product"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <!-- DeleteProduct -->
+      <xsd:element name="DeleteProductRequest">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="id" type="xsd:int"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="DeleteProductResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="message" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+    </xsd:schema>
+  </types>
+
+  <!-- ===== MESSAGES ===== -->
+  <message name="CreateProductInput">
+    <part name="parameters" element="tns:CreateProductRequest"/>
+  </message>
+  <message name="CreateProductOutput">
+    <part name="parameters" element="tns:CreateProductResponse"/>
+  </message>
+
+  <message name="GetProductsInput">
+    <part name="parameters" element="tns:GetProductsRequest"/>
+  </message>
+  <message name="GetProductsOutput">
+    <part name="parameters" element="tns:GetProductsResponse"/>
+  </message>
+
+  <message name="GetProductInput">
+    <part name="parameters" element="tns:GetProductRequest"/>
+  </message>
+  <message name="GetProductOutput">
+    <part name="parameters" element="tns:GetProductResponse"/>
+  </message>
+
+  <message name="PatchProductInput">
+    <part name="parameters" element="tns:PatchProductRequest"/>
+  </message>
+  <message name="PatchProductOutput">
+    <part name="parameters" element="tns:PatchProductResponse"/>
+  </message>
+
+  <message name="DeleteProductInput">
+    <part name="parameters" element="tns:DeleteProductRequest"/>
+  </message>
+  <message name="DeleteProductOutput">
+    <part name="parameters" element="tns:DeleteProductResponse"/>
+  </message>
+
+  <!-- ===== PORT TYPE ===== -->
+  <portType name="ProductsPortType">
+    <operation name="CreateProduct">
+      <input  message="tns:CreateProductInput"/>
+      <output message="tns:CreateProductOutput"/>
+    </operation>
+    <operation name="GetProducts">
+      <input  message="tns:GetProductsInput"/>
+      <output message="tns:GetProductsOutput"/>
+    </operation>
+    <operation name="GetProduct">
+      <input  message="tns:GetProductInput"/>
+      <output message="tns:GetProductOutput"/>
+    </operation>
+    <operation name="PatchProduct">
+      <input  message="tns:PatchProductInput"/>
+      <output message="tns:PatchProductOutput"/>
+    </operation>
+    <operation name="DeleteProduct">
+      <input  message="tns:DeleteProductInput"/>
+      <output message="tns:DeleteProductOutput"/>
+    </operation>
+  </portType>
+
+  <!-- ===== BINDING ===== -->
+  <binding name="ProductsBinding" type="tns:ProductsPortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+    <operation name="CreateProduct">
+      <soap:operation soapAction="CreateProduct"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+    <operation name="GetProducts">
+      <soap:operation soapAction="GetProducts"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+    <operation name="GetProduct">
+      <soap:operation soapAction="GetProduct"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+    <operation name="PatchProduct">
+      <soap:operation soapAction="PatchProduct"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+    <operation name="DeleteProduct">
+      <soap:operation soapAction="DeleteProduct"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+  </binding>
+
+  <!-- ===== SERVICE ===== -->
+  <service name="ProductsService">
+    <port name="ProductsPort" binding="tns:ProductsBinding">
+      <soap:address location="http://localhost:8000/products"/>
+    </port>
+  </service>
+
+</definitions>
